@@ -1,6 +1,6 @@
-# Run GitHub CI in DragonflyBSD 
+# Run GitHub CI in RISCOS 
 
-![Test](https://github.com/vmactions/dragonflybsd-vm/workflows/Test/badge.svg)
+![Test](https://github.com/vmactions/riscos-vm/workflows/Test/badge.svg)
 
 
 
@@ -15,7 +15,7 @@ Powered by [AnyVM.org](https://anyvm.org)
 >
 > These VMs are now AI-ready. With the **[vmactions-ci skill](https://github.com/vmactions/vmactions-skill)**, an AI coding agent -- Claude Code, Codex, Copilot CLI, Gemini CLI, and others -- understands the full vmactions interface and writes the GitHub Actions CI for you, **automatically**.
 >
-> Just describe what you want in plain language, e.g. *"run my tests on DragonflyBSD"* or *"check that my project builds on DragonflyBSD aarch64"*, and the agent generates a correct, ready-to-commit `test.yml`. It will:
+> Just describe what you want in plain language, e.g. *"run my tests on RISCOS"* or *"check that my project builds on RISCOS aarch64"*, and the agent generates a correct, ready-to-commit `test.yml`. It will:
 >
 > - pick the right action, `release`, and `arch` for your target;
 > - install your toolchain and dependencies in the `prepare` step;
@@ -27,25 +27,112 @@ Powered by [AnyVM.org](https://anyvm.org)
 >
 > ### >> [Get the vmactions-ci skill](https://github.com/vmactions/vmactions-skill) <<
 
-Use this action to run your CI in DragonflyBSD.
+Use this action to run your CI in RISCOS.
 
-The github workflow only supports Ubuntu, Windows and MacOS. But what if you need to use DragonflyBSD?
+The github workflow only supports Ubuntu, Windows and MacOS. But what if you need to use RISCOS?
 
 
 All the supported releases are here:
 
 
 
-| Release | x86_64(amd64) |
+| Release | armv7 (ARM 32-bit, Cortex-A7) |
 |---------|---------|
-| 6.4.2 | ✅ (rsync,scp,nfs) |
-| 6.4.1 | ✅ (rsync,scp,nfs) |
-| 6.4.0 | ✅ (rsync,scp,nfs) |
+| 5.30 | ✅ (tar) |
 
-<!-- arch-label: x86_64 = x86_64(amd64) -->
-Note: sshfs is not offered on DragonFlyBSD -- the sshfs (FUSE) mount is
-read-only in practice (the guest can read the shared dir, but writing a file
-back into the mount fails), so only rsync / scp / nfs are listed.
+<!-- arch-label: armv7 = armv7 (ARM 32-bit, Cortex-A7) -->
+
+> **Note:** RISC OS support is a **tech preview**. Remote command execution
+> and file sync both work, and the desktop comes up and is visible on the VNC
+> console. There is **no keyboard** -- see below. Pointer input is untested:
+> the ROM does carry a `usbmouse` driver, but no USB mouse has been attached
+> to this guest, so nothing here claims it works.
+
+> **Nothing from RISC OS Open is redistributed here.** The builder downloads
+> the official Raspberry Pi SD card image from `riscosopen.org` at build time;
+> this repository's release assets carry only its own work (the patched QEMU,
+> the agent, the injector). Note that ROOL deletes superseded media -- the
+> 5.30 zip answers 200 while the identically-shaped 5.28 URL answers 404 --
+> so a new release **replaces** this row rather than adding one.
+
+> **Linux x86_64 hosts only.** The patched QEMU below is published for that
+> platform alone, and there is no system fallback -- no released QEMU can boot
+> RISC OS on a raspi machine at all. `anyvm.py` fails fast with that message on
+> any other host rather than starting an emulator that cannot work. macOS and
+> Windows would need the same patched build produced on those runners; that is
+> not done yet.
+
+> **No working RISC OS port of QEMU existed, so this builder makes one.**
+> `files/qemu-riscos-raspi.patch` is eight fixes plus a new USB NIC model,
+> built by `files/build-qemu-riscos.sh` and published as this repo's own
+> release asset. Four of the eight are **generic QEMU defects** with nothing
+> to do with RISC OS: three in `hcd-dwc2.c` (the frame counter divided
+> elapsed time by the frame interval in PHY clocks rather than the frame
+> time; `GINTSTS_HCHINT` was raised but never lowered; the bus was started
+> from `dwc2_attach()` instead of on the HPRT0 port-enable edge), and one in
+> `bcm2835_dma.c`, where `xlen -= 4` on a `uint32_t` byte count wraps for any
+> length that is not a multiple of four -- the loop then spins about 2^30
+> times, scribbling over guest memory as it goes. The RISC OS specific ones
+> are a BCM2835 mailbox power channel, a VCHIQ mailbox peer, byte access on
+> the interrupt controller and the BSC/I2C FIFO (RISC OS uses `LDRB`/`STRB`
+> where the models demanded word access), and `hw/usb/dev-smsc95xx.c`, a
+> model of the SMSC LAN9512 that is the real Pi 2's NIC -- the guest has a
+> driver for it and for nothing else QEMU offers.
+
+> **There is no keyboard, and that is a RISC OS limitation.** The BCM2835 ROM
+> ships no USB keyboard driver at all: its USB tree has
+> `USBDriver/build/c/usbmouse` and nothing for keyboards, the boot prints
+> `No keyboard present - autobooting`, and a whole boot's worth of USB traffic
+> is `ep0` control transfers with zero interrupt-endpoint packets. Every HID
+> device is reported as `[error &24425355]`, and `&24425355` is ASCII `"USB$"`
+> -- USBDriver's "attached, no driver" tag. So there is no console to type an
+> installer into, and the guest is prepared by patching the disc image offline
+> instead (`files/rofilecore.py` parses FileCore's `SBPr` "BigDir" directories
+> and overwrites one cosmetic boot script in place, at its existing length).
+>
+> Three things about that image will bite anyone who touches it. The live boot
+> tree **does not exist** in a freshly downloaded image -- RISC OS copies
+> `$.!Boot.RO530Hook.Boot` into `$.!Boot.Choices.Boot` on first boot, so
+> patching the pristine image patches a template that is never run, and
+> patching a booted one lands somewhere else entirely. Every injected command
+> must be prefixed with `X` (`*X <cmd>` runs it and discards any error),
+> because one error stops the boot on a dialog waiting for a keypress that
+> can never come. And injected scripts must print **nothing**: any console
+> output from a Tasks hook opens the Wimp's single-tasking output screen,
+> which waits for a keypress at the end -- same brick, different cause.
+
+> **The agent.** RISC OS ships **no remote-access server of any kind** --
+> checked in a running guest, where `*Modules` lists 137 modules whose only
+> networking is the stack (`Internet`, `Resolver`, `DHCP`, `EtherUSB`) and
+> clients (`LanManFS` for SMB, `ShareFS`/`Freeway` for Acorn Access). No
+> telnetd, no sshd, no ftpd. So, like reactos-builder, this builder supplies
+> the server: `files/anyvmd.py`, a small Python agent on port 23
+> (`VM_TRANSPORT=telnet`).
+>
+> The telnet is real, not a raw socket wearing the name: IAC is unescaped
+> inbound and doubled outbound, and BINARY (RFC 856) is accepted both ways,
+> which is what keeps the tar stream intact. Verified against the worst case
+> it can meet -- 4096 bytes of `0xFF` (the IAC byte itself) followed by all
+> 256 byte values, round-tripped byte-identical. It is not a *shell*, though:
+> RISC OS has no pipes to a child and no `&&`, so the agent parses the two
+> tar one-liners itself, services them with Python's `tarfile`, and prints
+> the completion marker where a shell would have got it from the chained
+> `&& echo`. It also holds a persistent session, several commands down one
+> connection, because that is what `telnet_exec` does.
+>
+> It needs nothing installed -- ROOL's image already ships **Python 2.7.2** at
+> `$.Programming.Python.!Python27` with a complete standard library. It runs
+> inside a `TaskWindow` so the desktop stays interactive; single-tasking
+> Python would freeze the machine for as long as it served, and `*Shutdown`
+> would then do nothing at all.
+>
+> Sync was settled on the running guest rather than assumed. There is no sshd
+> and no ssh client (so no rsync / sshfs / scp) and no 9P client. `Fat32FS`
+> (1.63) *is* loaded and could in principle carry files on the FAT boot
+> partition, but it serves removable media and cannot see the SD card's own
+> boot partition -- `::0`, `::4` and `::PiBoot` all resolve to nothing, and
+> `Fat32Map`, despite the name, is a DOS-extension-to-filetype table rather
+> than a disc mapping.
 
 
 
@@ -62,28 +149,25 @@ on: [push]
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: A job to run test in DragonflyBSD
+    name: A job to run test in RISCOS
     env:
       MYTOKEN : ${{ secrets.MYTOKEN }}
       MYTOKEN2: "value2"
     steps:
     - uses: actions/checkout@v6
-    - name: Test in DragonflyBSD
+    - name: Test in RISCOS
       id: test
-      uses: vmactions/dragonflybsd-vm@v1
+      uses: vmactions/riscos-vm@v0
       with:
         envs: 'MYTOKEN MYTOKEN2'
         usesh: true
         prepare: |
-          pkg install -y socat
+          Echo anyvm
 
         run: |
-          pwd
-          ls -lah
-          whoami
-          env
-          uname -a
-          echo "OK"
+          Echo anyvm
+          Cat $.work
+
 
 
 
@@ -91,7 +175,7 @@ jobs:
 ```
 
 
-The latest major version is: `v1`, which is the most recommended to use. (You can also use the latest full version: `v1.3.1`)  
+The latest major version is: `v0`, which is the most recommended to use. (You can also use the latest full version: `v0.0.0`)  
 
 
 If you are migrating from the previous `v0`, please change the `runs-on: ` to `runs-on: ubuntu-latest`
@@ -126,7 +210,7 @@ The code is shared from the host to the VM via `rsync` by default, you can choos
 
     - name: Test
       id: test
-      uses: vmactions/dragonflybsd-vm@v1
+      uses: vmactions/riscos-vm@v0
       with:
         sync: sshfs  # or: nfs
 
@@ -148,7 +232,7 @@ When using `rsync` or `scp`,  you can define `copyback: false` to not copy files
 
     - name: Test
       id: test
-      uses: vmactions/dragonflybsd-vm@v1
+      uses: vmactions/riscos-vm@v0
       with:
         sync: rsync
         copyback: false
@@ -171,7 +255,7 @@ You can add NAT port between the host and the VM.
 ...
     - name: Test
       id: test
-      uses: vmactions/dragonflybsd-vm@v1
+      uses: vmactions/riscos-vm@v0
       with:
         nat: |
           "8080": "80"
@@ -190,7 +274,7 @@ The default memory of the VM is 6144MB, you can use `mem` option to set the memo
 ...
     - name: Test
       id: test
-      uses: vmactions/dragonflybsd-vm@v1
+      uses: vmactions/riscos-vm@v0
       with:
         mem: 4096
 ...
@@ -204,7 +288,7 @@ The VM is using all the cpu cores of the host by default, you can use `cpu` opti
 ...
     - name: Test
       id: test
-      uses: vmactions/dragonflybsd-vm@v1
+      uses: vmactions/riscos-vm@v0
       with:
         cpu: 3
 ...
@@ -213,15 +297,15 @@ The VM is using all the cpu cores of the host by default, you can use `cpu` opti
 
 ## 5. Select release
 
-It uses [the DragonflyBSD 6.4.2](conf/default.release.conf) by default, you can use `release` option to use another version of DragonflyBSD:
+It uses [the RISCOS 5.30](conf/default.release.conf) by default, you can use `release` option to use another version of RISCOS:
 
 ```yaml
 ...
     - name: Test
       id: test
-      uses: vmactions/dragonflybsd-vm@v1
+      uses: vmactions/riscos-vm@v0
       with:
-        release: "6.4.0"
+        release: "5.30"
 ...
 ```
 
@@ -231,13 +315,13 @@ You can also give only the leading, `.` separated part of a release. The newest 
 ...
     - name: Test
       id: test
-      uses: vmactions/dragonflybsd-vm@v1
+      uses: vmactions/riscos-vm@v0
       with:
-        release: "6"
+        release: "5"
 ...
 ```
 
-Here `release: "6"` runs the newest `6.x` release of DragonflyBSD. Give more parts to narrow it down: `release: "6.4"` runs the newest `6.4.x`. Each part you give has to match in full, so a release that does not exist fails the job instead of quietly falling back to another one.
+Here `release: "5"` runs the newest `5.x` release of RISCOS. Each part you give has to match in full, so a release that does not exist fails the job instead of quietly falling back to another one.
 
 ## 6. Select architecture
 
@@ -247,7 +331,7 @@ The vm is using x86_64(AMD64) by default, but you can use `arch` option to chang
 ...
     - name: Test
       id: test
-      uses: vmactions/dragonflybsd-vm@v1
+      uses: vmactions/riscos-vm@v0
       with:
         arch: aarch64
 ...
@@ -269,16 +353,16 @@ Support custom shell:
     - uses: actions/checkout@v6
     - name: Start VM
       id: vm
-      uses: vmactions/dragonflybsd-vm@v1
+      uses: vmactions/riscos-vm@v0
       with:
         sync: nfs
     - name: Custom shell step 1
-      shell: dragonflybsd {0}
+      shell: riscos {0}
       run: |
         pwd
         echo "this is step 1, running inside the VM"
     - name: Custom shell step 2
-      shell: dragonflybsd {0}
+      shell: riscos {0}
       run: |
         pwd
         echo "this is step 2, running inside the VM"
@@ -300,7 +384,7 @@ You can also use `custom-shell-name` to set a custom name for the shell wrapper:
     - uses: actions/checkout@v6
     - name: Start VM
       id: vm
-      uses: vmactions/dragonflybsd-vm@v1
+      uses: vmactions/riscos-vm@v0
       with:
         sync: nfs
         custom-shell-name: vmsh
@@ -326,7 +410,7 @@ If the time in VM is not correct, You can use `sync-time` option to synchronize 
 ...
     - name: Test
       id: test
-      uses: vmactions/dragonflybsd-vm@v1
+      uses: vmactions/riscos-vm@v0
       with:
         sync-time: true
 ...
@@ -341,7 +425,7 @@ By default, the action caches `apt` packages on the host and VM images/artifacts
 ...
     - name: Test
       id: test
-      uses: vmactions/dragonflybsd-vm@v1
+      uses: vmactions/riscos-vm@v0
       with:
         disable-cache: true
 ...
@@ -356,11 +440,11 @@ The `prepare` step (installing packages etc.) normally runs on every build. With
 ...
     - name: Test
       id: test
-      uses: vmactions/dragonflybsd-vm@v1
+      uses: vmactions/riscos-vm@v0
       with:
         cache-after-prepare: true
         prepare: |
-          pkg install -y socat
+          Echo anyvm
         run: |
           ...
 ...
@@ -389,7 +473,7 @@ Then use it in the workflow:
 ...
     - name: Test
       id: test
-      uses: vmactions/dragonflybsd-vm@v1
+      uses: vmactions/riscos-vm@v0
       with:
         debug-on-error: ${{ vars.DEBUG_ON_ERROR }}
 
@@ -402,7 +486,7 @@ You can also set the `vnc-password` parameter to set a custom password to protec
 ...
     - name: Test
       id: test
-      uses: vmactions/dragonflybsd-vm@v1
+      uses: vmactions/riscos-vm@v0
       with:
         debug-on-error: ${{ vars.DEBUG_ON_ERROR }}
         vnc-password: ${{ secrets.VNC_PASSWORD }}
@@ -419,7 +503,7 @@ See more: [debug on error](https://github.com/vmactions/.github/wiki/debug%E2%80
 
 # Under the hood
 
-We use Qemu to run the DragonflyBSD VM.
+We use Qemu to run the RISCOS VM.
 
 
 
