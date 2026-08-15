@@ -1,50 +1,18 @@
-          - release: "6.4.0"
+          - release: "5.30"
             arch: aarch64
-          - release: "6.4.0"
+          - release: "5.30"
             arch: riscv64
-          - release: "6.4.0"
+          - release: "5.30"
             arch: powerpc64
-          - release: "6.4.0"
+          - release: "5.30"
             arch: sparc64
-          - release: "6.4.0"
+          - release: "5.30"
             arch: ppc64le
-          - release: "6.4.0"
+          - release: "5.30"
             arch: s390x
-          - release: "6.4.0"
+          - release: "5.30"
             arch: i386
-          - release: "6.4.0"
-            arch: loongarch64
-          - release: "6.4.1"
-            arch: aarch64
-          - release: "6.4.1"
-            arch: riscv64
-          - release: "6.4.1"
-            arch: powerpc64
-          - release: "6.4.1"
-            arch: sparc64
-          - release: "6.4.1"
-            arch: ppc64le
-          - release: "6.4.1"
-            arch: s390x
-          - release: "6.4.1"
-            arch: i386
-          - release: "6.4.1"
-            arch: loongarch64
-          - release: "6.4.2"
-            arch: aarch64
-          - release: "6.4.2"
-            arch: riscv64
-          - release: "6.4.2"
-            arch: powerpc64
-          - release: "6.4.2"
-            arch: sparc64
-          - release: "6.4.2"
-            arch: ppc64le
-          - release: "6.4.2"
-            arch: s390x
-          - release: "6.4.2"
-            arch: i386
-          - release: "6.4.2"
+          - release: "5.30"
             arch: loongarch64
           - release: ""
             arch: aarch64
