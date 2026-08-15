@@ -1,0 +1,5 @@
+          # Manual matrix excludes only; combos with no conf are auto-excluded.
+          # RISC OS has NO x86_64 build upstream (armv7 only). Conf absence
+          # only auto-excludes suffix arches, so the implicit-base x86_64 leg
+          # (arch: "") must be excluded by hand.
+          - arch: ""
