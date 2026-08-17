@@ -22,7 +22,21 @@ concurrency:
 
 
 jobs:
+  # The sync jobs are gated on two levels, and both are needed.
+  #
+  # Level 1 -- the VM_TEST_EXCLUDE_<METHOD> matrix excludes below (baked by
+  # generate.yml from the same per-arch map as the step `if:`s): drop the legs
+  # whose arch does not support this job's method, so they never spawn.
+  #
+  # Level 2 -- this job-level `if:`. When NO arch supports the method, level 1
+  # strips EVERY leg, and GitHub then runs the job ONCE with all matrix values
+  # empty instead of zero times (community discussion 179993, open and
+  # undocumented). That leftover leg would be one more green do-nothing job, so
+  # the repo-level gate turns it into a real skip. This is the string-grep form
+  # used by testtar/test9p, for the same reason it is used there: no method name
+  # is a substring of another method name or of any arch key in the map.
   testsshfs:
+    if: ${{ contains('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}', 'sshfs') }}
     strategy:
       fail-fast: false
       matrix:
@@ -86,6 +100,14 @@ jobs:
             arch: i386
           - release: ""
             arch: loongarch64
+          - release: "5.30"
+            arch: ""
+          - release: "5.30"
+            arch: "armv7"
+          - release: ""
+            arch: ""
+          - release: ""
+            arch: "armv7"
 
 
     runs-on: ${{ matrix.runs }}
@@ -108,7 +130,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains(fromJSON('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}')[matrix.arch == '' && 'x86_64' || matrix.arch], 'sshfs') }}
       id: test
-      uses: vmactions/riscos-vm@d00e9f3f5c43dbd21a4a23282425bb0376cac760
+      uses: vmactions/riscos-vm@8636a410779ad28f6754b56bca4433802f25e9f2
       with:
         envs: 'DEBUG MYTOKEN MYTOKEN2'
         prepare: |
@@ -181,7 +203,9 @@ jobs:
 
 
 
+  # Two-level sync gating -- see the comment above testsshfs.
   testnfs:
+    if: ${{ contains('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}', 'nfs') }}
     strategy:
       fail-fast: false
       matrix:
@@ -245,6 +269,14 @@ jobs:
             arch: i386
           - release: ""
             arch: loongarch64
+          - release: "5.30"
+            arch: ""
+          - release: "5.30"
+            arch: "armv7"
+          - release: ""
+            arch: ""
+          - release: ""
+            arch: "armv7"
 
 
     runs-on: ${{ matrix.runs }}
@@ -259,7 +291,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains(fromJSON('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}')[matrix.arch == '' && 'x86_64' || matrix.arch], 'nfs') }}
       id: test
-      uses: vmactions/riscos-vm@d00e9f3f5c43dbd21a4a23282425bb0376cac760
+      uses: vmactions/riscos-vm@8636a410779ad28f6754b56bca4433802f25e9f2
       with:
         envs: 'DEBUG MYTOKEN MYTOKEN2'
         prepare: |
@@ -333,7 +365,9 @@ jobs:
 
 
 
+  # Two-level sync gating -- see the comment above testsshfs.
   testscp:
+    if: ${{ contains('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}', 'scp') }}
     strategy:
       fail-fast: false
       matrix:
@@ -397,6 +431,14 @@ jobs:
             arch: i386
           - release: ""
             arch: loongarch64
+          - release: "5.30"
+            arch: ""
+          - release: "5.30"
+            arch: "armv7"
+          - release: ""
+            arch: ""
+          - release: ""
+            arch: "armv7"
 
 
     runs-on: ${{ matrix.runs }}
@@ -418,7 +460,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains(fromJSON('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}')[matrix.arch == '' && 'x86_64' || matrix.arch], 'scp') }}
       id: test
-      uses: vmactions/riscos-vm@d00e9f3f5c43dbd21a4a23282425bb0376cac760
+      uses: vmactions/riscos-vm@8636a410779ad28f6754b56bca4433802f25e9f2
       with:
         envs: 'DEBUG MYTOKEN MYTOKEN2'
         prepare: |
@@ -519,6 +561,10 @@ jobs:
   # run everywhere. A repo that defines neither still tests boot + push +
   # copyback.
   testtar:
+    # Repo-level gate, same expression the steps below already use. Without it
+    # the guests whose builder does not list tar still spawn this job and green
+    # it with every step skipped.
+    if: ${{ contains('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}', 'tar') }}
     runs-on: ubuntu-24.04
     name: tar RISCOS
     env:
@@ -541,7 +587,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}', 'tar') }}
       id: test
-      uses: vmactions/riscos-vm@d00e9f3f5c43dbd21a4a23282425bb0376cac760
+      uses: vmactions/riscos-vm@8636a410779ad28f6754b56bca4433802f25e9f2
       with:
         mem: 4096
         debug: true
@@ -589,6 +635,9 @@ jobs:
   # body is per-repo data (VM_9P_RUN / VM_9P_VERIFY) because this guest speaks
   # rc, not POSIX sh.
   test9p:
+    # Repo-level gate -- see testtar. Only the 9p guests have this transport,
+    # so on every other repo this job was a green do-nothing.
+    if: ${{ contains('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}', '9p') }}
     runs-on: ubuntu-24.04
     name: 9p RISCOS
     env:
@@ -606,7 +655,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}', '9p') }}
       id: test
-      uses: vmactions/riscos-vm@d00e9f3f5c43dbd21a4a23282425bb0376cac760
+      uses: vmactions/riscos-vm@8636a410779ad28f6754b56bca4433802f25e9f2
       with:
         mem: 4096
         debug: true
@@ -644,7 +693,11 @@ jobs:
 
 
 
+  # Two-level sync gating -- see the comment above testsshfs. This job and
+  # testcustomshell both exercise the default sync (rsync), so they share the
+  # rsync exclude file.
   test:
+    if: ${{ contains('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}', 'rsync') }}
     strategy:
       fail-fast: false
       matrix:
@@ -709,6 +762,14 @@ jobs:
             arch: i386
           - release: ""
             arch: loongarch64
+          - release: "5.30"
+            arch: ""
+          - release: "5.30"
+            arch: "armv7"
+          - release: ""
+            arch: ""
+          - release: ""
+            arch: "armv7"
 
 
 
@@ -723,7 +784,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains(fromJSON('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}')[matrix.arch == '' && 'x86_64' || matrix.arch], 'rsync') }}
       id: test
-      uses: vmactions/riscos-vm@d00e9f3f5c43dbd21a4a23282425bb0376cac760
+      uses: vmactions/riscos-vm@8636a410779ad28f6754b56bca4433802f25e9f2
       with:
         envs: 'MYTOKEN MYTOKEN2'
         prepare: |
@@ -791,7 +852,9 @@ jobs:
 
 
 
+  # Two-level sync gating -- see the comment above testsshfs.
   testcustomshell:
+    if: ${{ contains('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}', 'rsync') }}
     strategy:
       fail-fast: false
       matrix:
@@ -855,6 +918,14 @@ jobs:
             arch: i386
           - release: ""
             arch: loongarch64
+          - release: "5.30"
+            arch: ""
+          - release: "5.30"
+            arch: "armv7"
+          - release: ""
+            arch: ""
+          - release: ""
+            arch: "armv7"
 
 
 
@@ -869,7 +940,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains(fromJSON('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}')[matrix.arch == '' && 'x86_64' || matrix.arch], 'rsync') }}
       id: test
-      uses: vmactions/riscos-vm@d00e9f3f5c43dbd21a4a23282425bb0376cac760
+      uses: vmactions/riscos-vm@8636a410779ad28f6754b56bca4433802f25e9f2
       with:
         envs: 'MYTOKEN MYTOKEN2'
         prepare: |
@@ -982,7 +1053,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains(fromJSON('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}')['x86_64'], 'rsync') }}
       id: test
-      uses: vmactions/riscos-vm@d00e9f3f5c43dbd21a4a23282425bb0376cac760
+      uses: vmactions/riscos-vm@8636a410779ad28f6754b56bca4433802f25e9f2
       with:
         mem: 4096
         debug: true
@@ -1039,7 +1110,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains(fromJSON('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}')['x86_64'], 'rsync') }}
       id: test
-      uses: vmactions/riscos-vm@d00e9f3f5c43dbd21a4a23282425bb0376cac760
+      uses: vmactions/riscos-vm@8636a410779ad28f6754b56bca4433802f25e9f2
       with:
         mem: 4096
         debug: true
@@ -1112,7 +1183,7 @@ jobs:
     - name: Test in RISCOS
       id: testerr
       continue-on-error: true
-      uses: vmactions/riscos-vm@d00e9f3f5c43dbd21a4a23282425bb0376cac760
+      uses: vmactions/riscos-vm@8636a410779ad28f6754b56bca4433802f25e9f2
       with:
         debug: true
         # A command that EXISTS and fails, rather than `false` or a made-up
@@ -1158,7 +1229,7 @@ jobs:
     - name: Test in RISCOS
       id: testpass
       continue-on-error: true
-      uses: vmactions/riscos-vm@d00e9f3f5c43dbd21a4a23282425bb0376cac760
+      uses: vmactions/riscos-vm@8636a410779ad28f6754b56bca4433802f25e9f2
       with:
         debug: true
         # No `true` and no double quotes: this body runs on every guest, and
