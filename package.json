@@ -1,6 +1,6 @@
 {
   "name": "vmactions-RISCOS",
-  "version": "",
+  "version": "1.0.0",
   "description": "GitHub actions for RISCOS",
   "type": "module",
   "main": "index.js",
