@@ -134,6 +134,19 @@ All the supported releases are here:
 > `Fat32Map`, despite the name, is a DOS-extension-to-filetype table rather
 > than a disc mapping.
 
+How the images are built:
+
+Each image is built automatically in the
+[anyvm-org/riscos-builder](https://github.com/anyvm-org/riscos-builder)
+repo's GitHub Actions: it downloads RISC OS Open's official Raspberry
+Pi distribution, prepares the SD-card image offline (remote access and
+the anyvm runtime support are injected into the image), verifies it by
+booting in QEMU, and exports the disk image. No interactive installer
+is run.
+
+Upstream media: the official RISC OS Open Raspberry Pi downloads from
+https://www.riscosopen.org/content/downloads/raspberry-pi.
+
 
 
 
@@ -224,7 +237,7 @@ The code is shared from the host to the VM via `rsync` by default, you can choos
 You can also set `sync: no`, so the files will not be synced to the  VM.
 
 
-When using `rsync` or `scp`,  you can define `copyback: false` to not copy files back from the VM in to the host.
+When using a copy based sync method (`rsync`, `scp`, `tar` or `9p`), you can define `copyback: false` to not copy files back from the VM to the host. It has no effect on `sshfs` and `nfs`, which are live mounts and never copy back.
 
 
 ```yaml
