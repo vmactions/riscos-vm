@@ -135,12 +135,16 @@ All the supported releases are here:
 > would then do nothing at all.
 >
 > Sync was settled on the running guest rather than assumed. There is no sshd
-> and no ssh client (so no rsync / sshfs / scp) and no 9P client. `Fat32FS`
-> (1.63) *is* loaded and could in principle carry files on the FAT boot
-> partition, but it serves removable media and cannot see the SD card's own
-> boot partition -- `::0`, `::4` and `::PiBoot` all resolve to nothing, and
-> `Fat32Map`, despite the name, is a DOS-extension-to-filetype table rather
-> than a disc mapping.
+> and no ssh client (so no rsync / sshfs / scp) and no 9P client. The SD
+> card's FAT boot partition *is* reachable from the guest: `$.!Boot.Loader` is
+> a `DOSFS` image file onto it, read and write (`*Cat $.!Boot.Loader` lists
+> `RISCOS/IMG`, `CONFIG/TXT`, `START/ELF`...). It is not a sync channel,
+> though: the host can only get at that partition with the disc closed, so it
+> would be a drop box for before boot and after shutdown, and tar over the
+> agent already covers both directions live. (`Fat32fs` 1.63 is unrelated; it
+> serves removable FAT media such as a FAT32 USB stick, and `Fat32Map` is its
+> DOS-extension-to-filetype table.) An earlier version of this note said the
+> boot partition could not be seen at all; that was wrong (riscos-vm#13).
 
 How the images are built:
 
@@ -223,7 +227,7 @@ The `prepare` and `run` scripts are always executed with `sh` in the VM, whateve
 
 ## 2. Share code
 
-The code is shared from the host to the VM via `rsync` by default, you can choose to use `sshfs` or `nfs` or `scp` to share code instead.
+The code is shared from the host to the VM via the first sync method listed for your release and architecture in the table above (`rsync` for most of them), you can choose to use `sshfs` or `nfs` or `scp` to share code instead.
 
 
 ```yaml
@@ -264,6 +268,9 @@ When using a copy based sync method (`rsync`, `scp`, `tar` or `9p`), you can def
 
 
 ```
+
+
+With `sync: nfs` the workspace is a mount of the runner's directory, and every user in the VM, root included, is mapped to the runner's user on the host (GNU Hurd excepted). So `chown` / `chgrp` on files in the workspace fail with `Operation not permitted`, and so does `tar -x` as root on an archive that stores another owner (e.g. `uid 0`), because it tries to restore that owner. Use a copy based method (`rsync`, `scp` or `tar`), which puts the files on the VM's own disk, or extract with `tar --no-same-owner`.
 
 
 
