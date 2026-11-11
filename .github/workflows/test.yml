@@ -115,7 +115,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains(fromJSON('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}')[matrix.arch == '' && 'x86_64' || matrix.arch], 'sshfs') }}
       id: test
-      uses: vmactions/riscos-vm@8d0c08ffbd8118f02332f1a1d919de72d5cc2d77
+      uses: vmactions/riscos-vm@160a4a5c29835377e9ac653bb4447d7cb16a6be2
       with:
         envs: 'DEBUG MYTOKEN MYTOKEN2'
         prepare: |
@@ -261,7 +261,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains(fromJSON('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}')[matrix.arch == '' && 'x86_64' || matrix.arch], 'nfs') }}
       id: test
-      uses: vmactions/riscos-vm@8d0c08ffbd8118f02332f1a1d919de72d5cc2d77
+      uses: vmactions/riscos-vm@160a4a5c29835377e9ac653bb4447d7cb16a6be2
       with:
         envs: 'DEBUG MYTOKEN MYTOKEN2'
         prepare: |
@@ -470,7 +470,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains(fromJSON('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}')[matrix.arch == '' && 'x86_64' || matrix.arch], 'scp') }}
       id: test
-      uses: vmactions/riscos-vm@8d0c08ffbd8118f02332f1a1d919de72d5cc2d77
+      uses: vmactions/riscos-vm@160a4a5c29835377e9ac653bb4447d7cb16a6be2
       with:
         envs: 'DEBUG MYTOKEN MYTOKEN2'
         prepare: |
@@ -597,7 +597,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}', 'tar') }}
       id: test
-      uses: vmactions/riscos-vm@8d0c08ffbd8118f02332f1a1d919de72d5cc2d77
+      uses: vmactions/riscos-vm@160a4a5c29835377e9ac653bb4447d7cb16a6be2
       with:
         mem: 4096
         debug: true
@@ -665,7 +665,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}', '9p') }}
       id: test
-      uses: vmactions/riscos-vm@8d0c08ffbd8118f02332f1a1d919de72d5cc2d77
+      uses: vmactions/riscos-vm@160a4a5c29835377e9ac653bb4447d7cb16a6be2
       with:
         mem: 4096
         debug: true
@@ -773,7 +773,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains(fromJSON('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}')[matrix.arch == '' && 'x86_64' || matrix.arch], 'rsync') }}
       id: test
-      uses: vmactions/riscos-vm@8d0c08ffbd8118f02332f1a1d919de72d5cc2d77
+      uses: vmactions/riscos-vm@160a4a5c29835377e9ac653bb4447d7cb16a6be2
       with:
         envs: 'MYTOKEN MYTOKEN2'
         prepare: |
@@ -858,7 +858,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains(fromJSON('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}')['x86_64'], 'rsync') }}
       id: test
-      uses: vmactions/riscos-vm@8d0c08ffbd8118f02332f1a1d919de72d5cc2d77
+      uses: vmactions/riscos-vm@160a4a5c29835377e9ac653bb4447d7cb16a6be2
       with:
         prepare: |
           Echo anyvm
@@ -953,7 +953,7 @@ jobs:
         sparse-checkout-cone-mode: true
     - name: Test in RISCOS
       id: test
-      uses: vmactions/riscos-vm@8d0c08ffbd8118f02332f1a1d919de72d5cc2d77
+      uses: vmactions/riscos-vm@160a4a5c29835377e9ac653bb4447d7cb16a6be2
       with:
         arch: ${{ matrix.arch }}
         debug: true
@@ -1001,7 +1001,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains(fromJSON('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}')['x86_64'], 'rsync') }}
       id: test
-      uses: vmactions/riscos-vm@8d0c08ffbd8118f02332f1a1d919de72d5cc2d77
+      uses: vmactions/riscos-vm@160a4a5c29835377e9ac653bb4447d7cb16a6be2
       with:
         envs: 'MYTOKEN MYTOKEN2'
         prepare: |
@@ -1112,7 +1112,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains(fromJSON('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}')['x86_64'], 'rsync') }}
       id: test
-      uses: vmactions/riscos-vm@8d0c08ffbd8118f02332f1a1d919de72d5cc2d77
+      uses: vmactions/riscos-vm@160a4a5c29835377e9ac653bb4447d7cb16a6be2
       with:
         mem: 4096
         debug: true
@@ -1169,7 +1169,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains(fromJSON('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}')['x86_64'], 'rsync') }}
       id: test
-      uses: vmactions/riscos-vm@8d0c08ffbd8118f02332f1a1d919de72d5cc2d77
+      uses: vmactions/riscos-vm@160a4a5c29835377e9ac653bb4447d7cb16a6be2
       with:
         mem: 4096
         debug: true
@@ -1244,7 +1244,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains(fromJSON('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}')['x86_64'], 'rsync') }}
       id: test
-      uses: vmactions/riscos-vm@8d0c08ffbd8118f02332f1a1d919de72d5cc2d77
+      uses: vmactions/riscos-vm@160a4a5c29835377e9ac653bb4447d7cb16a6be2
       with:
         mem: 4096
         debug: true
@@ -1300,7 +1300,7 @@ jobs:
     - name: Test in RISCOS
       if: ${{ contains(fromJSON('{"x86_64":[],"aarch64":[],"riscv64":[],"powerpc64":[],"sparc64":[],"ppc64le":[],"s390x":[],"i386":[],"loongarch64":[],"armv7":["tar"]}')['x86_64'], 'rsync') }}
       id: test
-      uses: vmactions/riscos-vm@8d0c08ffbd8118f02332f1a1d919de72d5cc2d77
+      uses: vmactions/riscos-vm@160a4a5c29835377e9ac653bb4447d7cb16a6be2
       with:
         mem: 4096
         debug: true
@@ -1369,7 +1369,7 @@ jobs:
     - name: Test in RISCOS
       id: testerr
       continue-on-error: true
-      uses: vmactions/riscos-vm@8d0c08ffbd8118f02332f1a1d919de72d5cc2d77
+      uses: vmactions/riscos-vm@160a4a5c29835377e9ac653bb4447d7cb16a6be2
       with:
         debug: true
         # A command that EXISTS and fails, rather than `false` or a made-up
@@ -1415,7 +1415,7 @@ jobs:
     - name: Test in RISCOS
       id: testpass
       continue-on-error: true
-      uses: vmactions/riscos-vm@8d0c08ffbd8118f02332f1a1d919de72d5cc2d77
+      uses: vmactions/riscos-vm@160a4a5c29835377e9ac653bb4447d7cb16a6be2
       with:
         debug: true
         # No `true` and no double quotes: this body runs on every guest, and
